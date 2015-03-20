@@ -45,5 +45,6 @@ void commanderGetRPY(float* eulerRollDesired, float* eulerPitchDesired, float* e
 void commanderGetRPYType(RPYType* rollType, RPYType* pitchType, RPYType* yawType);
 void commanderGetThrust(uint16_t* thrust);
 void commanderGetAltHold(bool* altHold, bool* setAltHold, float* altHoldChange);
+void commanderGetRotationDes(float D[3][3], float d[3], float ddot[3]);
 
 #endif /* COMMANDER_H_ */

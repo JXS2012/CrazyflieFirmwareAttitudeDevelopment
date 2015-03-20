@@ -29,7 +29,7 @@
 #include "sensfusion6.h"
 #include "imu.h"
 #include "param.h"
-
+#include "matrix.h"
 //#define MADWICK_QUATERNION_IMU
 
 #ifdef MADWICK_QUATERNION_IMU
@@ -57,7 +57,7 @@ float q3 = 0.0f;  // quaternion of sensor frame relative to auxiliary frame
 static bool isInit;
 
 // TODO: Make math util file
-static float invSqrt(float x);
+//static float invSqrt(float x);
 
 void sensfusion6Init()
 {
@@ -240,9 +240,41 @@ void sensfusion6GetEulerRPY(float* roll, float* pitch, float* yaw)
   if (gx>1) gx=1;
   if (gx<-1) gx=-1;
 
+
   *yaw = atan2(2*(q0*q3 + q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3) * 180 / M_PI;
   *pitch = asin(gx) * 180 / M_PI; //Pitch seems to be inverted
   *roll = atan2(gy, gz) * 180 / M_PI;
+
+  /*
+  *yaw = atan2(2*q1*q2-2*q0*q3, 2*q0*q0+2*q1*q1-1) * 180 / M_PI;
+  *pitch = -asin(2*q1*q3+2*q0*q2) * 180 / M_PI;
+  *roll = atan2(2*q2*q3-2*q0*q1,2*q0*q0+2*q3*q3-1) * 180 / M_PI;
+  */
+}
+
+void sensfusion6GetR(float R[3][3])
+{
+
+  R[0][0] = q0*q0  + q1*q1 - q2*q2 - q3*q3;
+  R[0][1] = 2 * (q1*q2 - q0*q3);
+  R[0][2] = 2 * (q0*q2 + q1*q3);
+  R[1][0] = 2 * (q1*q2 + q0*q3);
+  R[1][1] = q0*q0 - q1*q1 + q2*q2 - q3*q3;
+  R[1][2] = 2 * (q2*q3 - q0*q1);
+  R[2][0] = 2 * (q1*q3 - q0*q2);
+  R[2][1] = 2 * (q0*q1 + q2*q3);
+  R[2][2] = q0*q0 - q1*q1 - q2*q2 + q3*q3;
+/*
+	  R[0][0] = 2*q0*q0  + 2*q1*q1 - 1;
+	  R[0][1] = 2 * (q1*q2 + q0*q3);
+	  R[0][2] = 2 * (-q0*q2 + q1*q3);
+	  R[1][0] = 2 * (q1*q2 - q0*q3);
+	  R[1][1] = 2*q0*q0 - 1 + 2*q2*q2;
+	  R[1][2] = 2 * (q2*q3 + q0*q1);
+	  R[2][0] = 2 * (q1*q3 + q0*q2);
+	  R[2][1] = 2 * (-q0*q1 + q2*q3);
+	  R[2][2] = 2*q0*q0 - 1 + 2*q3*q3;
+	  */
 }
 
 float sensfusion6GetAccZWithoutGravity(const float ax, const float ay, const float az)
@@ -260,6 +292,7 @@ float sensfusion6GetAccZWithoutGravity(const float ax, const float ay, const flo
 //---------------------------------------------------------------------------------------------------
 // Fast inverse square-root
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
+/*
 float invSqrt(float x)
 {
   float halfx = 0.5f * x;
@@ -270,7 +303,7 @@ float invSqrt(float x)
   y = y * (1.5f - (halfx * y * y));
   return y;
 }
-
+*/
 
 
 PARAM_GROUP_START(sensorfusion6)

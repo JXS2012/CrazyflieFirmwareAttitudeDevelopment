@@ -164,6 +164,22 @@ void commanderGetThrust(uint16_t* thrust)
   commanderWatchdog();
 }
 
+void commanderGetRotationDes(float D[3][3], float d[3], float ddot[3])
+{
+	int i,j;
+	for (i = 0; i < 3; i++)
+		for (j = 0; j < 3; j++)
+			D[i][j] = 0;
+	D[0][0] = 1;
+	D[1][1] = 1;
+	D[2][2] = 1;
+	for (i = 0; i < 3; i++)
+	{
+		d[i] = 0;
+		ddot[i] = 0;
+	}
+}
+
 // Params for flight modes
 PARAM_GROUP_START(flightmode)
 PARAM_ADD(PARAM_UINT8, althold, &altHoldMode)
