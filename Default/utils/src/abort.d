@@ -1,1 +1,1 @@
-utils/src/abort.d: ../utils/src/abort.c
+utils/src/abort.o: ../utils/src/abort.c

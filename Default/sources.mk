@@ -12,17 +12,19 @@ ASM_SRCS :=
 CXX_SRCS := 
 C++_SRCS := 
 CC_SRCS := 
-OBJS := 
 C++_DEPS := 
+OBJS := 
 C_DEPS := 
+ASM_DEPS := 
 CC_DEPS := 
 CPP_DEPS := 
-EXECUTABLES := 
 CXX_DEPS := 
 C_UPPER_DEPS := 
+S_UPPER_DEPS := 
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+. \
 utils/src \
 modules/src \
 lib/STM32F10x_StdPeriph_Driver/src \
@@ -33,4 +35,5 @@ lib/CMSIS/Core/CM3 \
 init \
 hal/src \
 drivers/src \
+bin \
 

@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../modules/src/attitude_controller.c \
 ../modules/src/comm.c \
 ../modules/src/commander.c \
 ../modules/src/console.c \
@@ -11,7 +12,9 @@ C_SRCS += \
 ../modules/src/crtp.c \
 ../modules/src/crtpservice.c \
 ../modules/src/info.c \
+../modules/src/kalman.c \
 ../modules/src/log.c \
+../modules/src/matrix.c \
 ../modules/src/mem.c \
 ../modules/src/param.c \
 ../modules/src/pid.c \
@@ -19,9 +22,11 @@ C_SRCS += \
 ../modules/src/sensfusion6.c \
 ../modules/src/stabilizer.c \
 ../modules/src/system.c \
+../modules/src/traj_planner.c \
 ../modules/src/worker.c 
 
 OBJS += \
+./modules/src/attitude_controller.o \
 ./modules/src/comm.o \
 ./modules/src/commander.o \
 ./modules/src/console.o \
@@ -29,7 +34,9 @@ OBJS += \
 ./modules/src/crtp.o \
 ./modules/src/crtpservice.o \
 ./modules/src/info.o \
+./modules/src/kalman.o \
 ./modules/src/log.o \
+./modules/src/matrix.o \
 ./modules/src/mem.o \
 ./modules/src/param.o \
 ./modules/src/pid.o \
@@ -37,9 +44,11 @@ OBJS += \
 ./modules/src/sensfusion6.o \
 ./modules/src/stabilizer.o \
 ./modules/src/system.o \
+./modules/src/traj_planner.o \
 ./modules/src/worker.o 
 
 C_DEPS += \
+./modules/src/attitude_controller.d \
 ./modules/src/comm.d \
 ./modules/src/commander.d \
 ./modules/src/console.d \
@@ -47,7 +56,9 @@ C_DEPS += \
 ./modules/src/crtp.d \
 ./modules/src/crtpservice.d \
 ./modules/src/info.d \
+./modules/src/kalman.d \
 ./modules/src/log.d \
+./modules/src/matrix.d \
 ./modules/src/mem.d \
 ./modules/src/param.d \
 ./modules/src/pid.d \
@@ -55,14 +66,15 @@ C_DEPS += \
 ./modules/src/sensfusion6.d \
 ./modules/src/stabilizer.d \
 ./modules/src/system.d \
+./modules/src/traj_planner.d \
 ./modules/src/worker.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
 modules/src/%.o: ../modules/src/%.c
 	@echo 'Building file: $<'
-	@echo 'Invoking: GCC C Compiler'
-	arm-none-eabi-gcc -O2 -g -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	@echo 'Invoking: Cross ARM C Compiler'
+	arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -O2  -g -std=gnu11 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -c -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

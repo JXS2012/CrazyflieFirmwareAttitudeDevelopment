@@ -27,7 +27,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "math.h"
+#include <math.h>
 
 #include "system.h"
 #include "pm.h"
@@ -216,7 +216,7 @@ static void stabilizerTask(void* param)
     	  if (landing) landing = FALSE;
     	  if (!traj_init) init_trajectory();
     	  vol = pmGetBatteryVoltage();
-    	  cmd_actuation = actuatorThrust*sqrt(force2);//*(-5000./43000.*(vol-3.4)+1);
+    	  cmd_actuation = actuatorThrust*sqrt(force2)*(-5000./43000.*(vol-3.4)+1);
     	  distributePower(cmd_actuation, actuatorRoll, -actuatorPitch, -actuatorYaw);
       }
       else
