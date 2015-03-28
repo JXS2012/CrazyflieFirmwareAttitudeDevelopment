@@ -15,4 +15,5 @@ void get_trajectory_rotation(float D[3][3], float *azref);
 
 void get_trajectory_angular_velocity(float invR[3][3], float force2, float w[3]);
 
+
 #endif /* TRAJ_PLANNER_H_ */

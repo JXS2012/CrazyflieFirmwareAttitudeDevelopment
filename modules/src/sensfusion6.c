@@ -29,7 +29,7 @@
 #include "sensfusion6.h"
 #include "imu.h"
 #include "param.h"
-#include "matrix.h"
+#include "better_matrix.h"
 //#define MADWICK_QUATERNION_IMU
 
 #ifdef MADWICK_QUATERNION_IMU
@@ -97,7 +97,7 @@ void sensfusion6UpdateQ(float gx, float gy, float gz, float ax, float ay, float 
   if(!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f)))
   {
     // Normalise accelerometer measurement
-    recipNorm = invSqrt(ax * ax + ay * ay + az * az);
+    recipNorm = invSqrtBetter(ax * ax + ay * ay + az * az);
     ax *= recipNorm;
     ay *= recipNorm;
     az *= recipNorm;
@@ -122,7 +122,7 @@ void sensfusion6UpdateQ(float gx, float gy, float gz, float ax, float ay, float 
     s1 = _4q1 * q3q3 - _2q3 * ax + 4.0f * q0q0 * q1 - _2q0 * ay - _4q1 + _8q1 * q1q1 + _8q1 * q2q2 + _4q1 * az;
     s2 = 4.0f * q0q0 * q2 + _2q0 * ax + _4q2 * q3q3 - _2q3 * ay - _4q2 + _8q2 * q1q1 + _8q2 * q2q2 + _4q2 * az;
     s3 = 4.0f * q1q1 * q3 - _2q1 * ax + 4.0f * q2q2 * q3 - _2q2 * ay;
-    recipNorm = invSqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3); // normalise step magnitude
+    recipNorm = invSqrtBetter(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3); // normalise step magnitude
     s0 *= recipNorm;
     s1 *= recipNorm;
     s2 *= recipNorm;
@@ -142,7 +142,7 @@ void sensfusion6UpdateQ(float gx, float gy, float gz, float ax, float ay, float 
   q3 += qDot4 * dt;
 
   // Normalise quaternion
-  recipNorm = invSqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3);
+  recipNorm = invSqrtBetter(q0*q0 + q1*q1 + q2*q2 + q3*q3);
   q0 *= recipNorm;
   q1 *= recipNorm;
   q2 *= recipNorm;
@@ -170,7 +170,7 @@ void sensfusion6UpdateQ(float gx, float gy, float gz, float ax, float ay, float 
   if(!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f)))
   {
     // Normalise accelerometer measurement
-    recipNorm = invSqrt(ax * ax + ay * ay + az * az);
+    recipNorm = invSqrtBetter(ax * ax + ay * ay + az * az);
     ax *= recipNorm;
     ay *= recipNorm;
     az *= recipNorm;
@@ -221,7 +221,7 @@ void sensfusion6UpdateQ(float gx, float gy, float gz, float ax, float ay, float 
   q3 += (qa * gz + qb * gy - qc * gx);
 
   // Normalise quaternion
-  recipNorm = invSqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+  recipNorm = invSqrtBetter(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
   q0 *= recipNorm;
   q1 *= recipNorm;
   q2 *= recipNorm;
@@ -252,18 +252,18 @@ void sensfusion6GetEulerRPY(float* roll, float* pitch, float* yaw)
   */
 }
 
-void sensfusion6GetR(float R[3][3])
+void sensfusion6GetR(float R[9])
 {
 
-  R[0][0] = q0*q0  + q1*q1 - q2*q2 - q3*q3;
-  R[0][1] = 2 * (q1*q2 - q0*q3);
-  R[0][2] = 2 * (q0*q2 + q1*q3);
-  R[1][0] = 2 * (q1*q2 + q0*q3);
-  R[1][1] = q0*q0 - q1*q1 + q2*q2 - q3*q3;
-  R[1][2] = 2 * (q2*q3 - q0*q1);
-  R[2][0] = 2 * (q1*q3 - q0*q2);
-  R[2][1] = 2 * (q0*q1 + q2*q3);
-  R[2][2] = q0*q0 - q1*q1 - q2*q2 + q3*q3;
+  R[0] = q0*q0  + q1*q1 - q2*q2 - q3*q3;
+  R[1] = 2 * (q1*q2 - q0*q3);
+  R[2] = 2 * (q0*q2 + q1*q3);
+  R[3] = 2 * (q1*q2 + q0*q3);
+  R[4] = q0*q0 - q1*q1 + q2*q2 - q3*q3;
+  R[5] = 2 * (q2*q3 - q0*q1);
+  R[6] = 2 * (q1*q3 - q0*q2);
+  R[7] = 2 * (q0*q1 + q2*q3);
+  R[8] = q0*q0 - q1*q1 - q2*q2 + q3*q3;
 /*
 	  R[0][0] = 2*q0*q0  + 2*q1*q1 - 1;
 	  R[0][1] = 2 * (q1*q2 + q0*q3);

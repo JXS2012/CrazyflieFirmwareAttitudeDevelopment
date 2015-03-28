@@ -134,4 +134,3 @@ float vectorNorm2(float a[3])
 {
 	return a[0]*a[0] + a[1]*a[1] + a[2]*a[2];
 }
-

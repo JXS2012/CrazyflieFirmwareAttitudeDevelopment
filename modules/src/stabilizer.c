@@ -43,10 +43,10 @@
 #include "param.h"
 #include "ms5611.h"
 
-#include "matrix.h"
-#include "attitude_controller.h"
-#include "traj_planner.h"
-#include "kalman.h"
+#include "better_matrix.h"
+#include "better_attitude_controller.h"
+#include "better_traj_planner.h"
+#include "better_kalman.h"
 #undef max
 #define max(a,b) ((a) > (b) ? (a) : (b))
 #undef min
@@ -99,24 +99,26 @@ static float landingt0 = 0;
 
 //Trajectory folllowing
 static bool traj_init = FALSE;
-static float acc_body[3] = {0,0,0};
-static float ddot[3] = {0,0,0};
-static float d[3] = {0,0,0};
-static float D[3][3] = {{0,0,0},{0,0,0},{0,0,0}};
-static float u[3] = {0,0,0};
 static float force2 = 0;
+
+Matrix acc_body;
+Matrix ddot;
+Matrix d;
+Matrix D;
+Matrix u;
 
 //Controller
 static float  uz;
 static float cmd_actuation = 0;
 
 //Kalman filter for z direction
-static float xhat_k_1[2] = {0,0};
-static float z_k[2] = {0,0};
 static float u_k_1 = 0;
-static float P_k_1[2][2] = {{0,0},{0,0}};
-static float xhat_k[2] = {0,0};
-static float P_k[2][2]	 = {{0,0},{0,0}};
+Matrix xhat_k_1;
+Matrix z_k;
+Matrix P_k_1;
+Matrix xhat_k;
+Matrix P_k;
+
 static bool kalman_init = FALSE;
 static float kalman_vz = 0;
 static float kalman_z = 0;
@@ -134,8 +136,8 @@ static float deadband(float value, const float threshold);
 static void trajectory_attitude_controller();
 
 static void init_trajectory();
-static void trajectoryTracking(float R[3][3]);
-static void trajectoryController(float R[3][3]);
+static void trajectoryTracking(Matrix R);
+static void trajectoryController(Matrix R);
 
 static void init_landing();
 static void landing_contoller();
@@ -143,19 +145,30 @@ static void landing_contoller();
 static void kalman_filter_update();
 
 void stabilizerInit(void)
-{
-  if(isInit)
-    return;
+ {
+	if (isInit)
+		return;
 
-  motorsInit();
-  imu6Init();
-  sensfusion6Init();
-  controllerInit();
+	motorsInit();
+	imu6Init();
+	sensfusion6Init();
+	controllerInit();
 
-  xTaskCreate(stabilizerTask, (const signed char * const)"STABILIZER",
-              2*configMINIMAL_STACK_SIZE, NULL, /*Piority*/2, NULL);
+	xTaskCreate(stabilizerTask, (const signed char * const )"STABILIZER",
+			2*configMINIMAL_STACK_SIZE, NULL, /*Piority*/2, NULL);
 
-  isInit = TRUE;
+	acc_body = initMatrix(3, 1);
+	ddot = initMatrix(3, 1);
+	d = initMatrix(3, 1);
+	D = initMatrix(3, 3);
+	u = initMatrix(3, 1);
+	xhat_k_1 = initMatrix(2, 1);
+	z_k = initMatrix(2, 1);
+	P_k_1 = initMatrix(2, 2);
+	xhat_k = initMatrix(2, 2);
+	P_k = initMatrix(2, 2);
+
+	isInit = TRUE;
 }
 
 bool stabilizerTest(void)
@@ -206,9 +219,9 @@ static void stabilizerTask(void* param)
     	  attitudeCounter = 0;
       }
 
-      actuatorRoll = u[0]*50;
-      actuatorPitch = u[1]*50;
-      actuatorYaw = u[2]*50;
+      actuatorRoll = *(u.head)*50;
+      actuatorPitch = *(u.head + 1)*50;
+      actuatorYaw = *(u.head + 2)*50;
       commanderGetThrust(&actuatorThrust);
 
       if (actuatorThrust > 0)
@@ -232,47 +245,49 @@ static void stabilizerTask(void* param)
 
 static void kalman_filter_update()
 {
-	  ms5611GetData(&pressure, &temperature, &aslRaw);
-	  if (kalman_init)
-	  {
-  	  z_k[0] = baro_ratio*aslRaw;
-  	  u_k_1 = acc_body[2]*9.81;
-		  kalman_update(xhat_k_1, z_k, u_k_1, P_k_1, xhat_k, P_k);
-		  int i,j;
-		  for (i = 0; i < 2; i ++)
-		  {
-			  xhat_k_1[i] = xhat_k[i];
-			  for (j = 0; j < 2; j ++)
-				  P_k_1[i][j] = P_k[i][j];
-		  }
-		  kalman_vz = xhat_k[1];
-		  kalman_z = xhat_k[0];
-	  }
-	  else if (traj_init && aslRaw != 0)
-		  	  {
-		  	  ground_z = baro_ratio*aslRaw;
-		  	  xhat_k_1[0] = baro_ratio*aslRaw;
-		  	  u_k_1 = acc_body[2]*9.81;
-		  	  kalman_init = TRUE;
-		  	  }
+	ms5611GetData(&pressure, &temperature, &aslRaw);
+	if (kalman_init) {
+		*z_k.head = baro_ratio * aslRaw;
+		u_k_1 = *(acc_body.head + 2) * 9.81;
+
+		kalman_updateMatrix(xhat_k_1, z_k, u_k_1, P_k_1, &xhat_k, &P_k);
+		int i, j;
+		for (i = 0; i < 2; i++) {
+			*(xhat_k_1.head + i) = *(xhat_k.head + i);
+			for (j = 0; j < 2; j++)
+				*(P_k_1.head + i*P_k_1.column + j) = *(P_k.head + i*P_k.column + j);
+		}
+		kalman_vz = *(xhat_k.head + 1);
+		kalman_z = *(xhat_k.head);
+	} else if (traj_init && aslRaw != 0) {
+		ground_z = baro_ratio * aslRaw;
+		*xhat_k_1.head = baro_ratio * aslRaw;
+		u_k_1 = *(acc_body.head + 2) * 9.81;
+		kalman_init = TRUE;
+	}
 }
 
-static void trajectory_attitude_controller()
-{
-	  //update R, omega
-  float R[3][3] = {{0,0,0},{0,0,0},{0,0,0}};
-  float omega[3] = {gyro.x, gyro.y ,gyro.z};
-  sensfusion6UpdateQ(gyro.x, gyro.y, gyro.z, acc.x, acc.y, acc.z, FUSION_UPDATE_DT);
-  sensfusion6GetR(R);
+static void trajectory_attitude_controller() {
+	//update R, omega
+	float R_value[9] = { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
+	float omega_value[3] = { gyro.x, gyro.y, gyro.z };
+	Matrix omega = initMatrixValue(3, 1, omega_value);
+	sensfusion6UpdateQ(gyro.x, gyro.y, gyro.z, acc.x, acc.y, acc.z,
+			FUSION_UPDATE_DT);
+	sensfusion6GetR(R_value);
 
-  // Compute acc in odom coordinates
-	float acc_vector[3] = {acc.x, acc.y, acc.z};
-	matrixVectorProduct(R,acc_vector,acc_body);
-	acc_body[2] = acc_body[2]-1;
+	// Compute acc in odom coordinates
+	float acc_vector_value[3] = { acc.x, acc.y, acc.z };
+
+	Matrix R = initMatrixValue(3, 3, R_value);
+	Matrix acc_vector = initMatrixValue(3, 1, acc_vector_value);
+
+	acc_body = matrixProductBetter(R, acc_vector);
+	*(acc_body.head + 2) = *(acc_body.head + 2) - 1;
 
 	// Trajectory Control
 	trajectoryController(R);
-  attitudeControl(R,D,d,ddot,omega, u);
+	u = attitudeControlMatrix(R, D, d, ddot, omega);
 
 }
 
@@ -286,14 +301,15 @@ static void landing_contoller()
 	    distributePower(cmd_actuation, actuatorRoll, -actuatorPitch, -actuatorYaw);
 }
 
-static void init_landing()
-{
-	int i,j;
-	for (i=0; i<3; i++)
-	{
-		d[i] = 0;
-		for (j=0;j<3; j++)
-			if (i!=j) D[i][j] = 0; else D[i][j] = 1;
+static void init_landing() {
+	int i, j;
+	for (i = 0; i < 3; i++) {
+		*(d.head + i) = 0;
+		for (j = 0; j < 3; j++)
+			if (i != j)
+				*(D.head + i * D.column + j) = 0;
+			else
+				*(D.head + i * D.column + j) = 1;
 	}
 	landingt0 = xTaskGetTickCount();
 	landing = TRUE;
@@ -301,29 +317,28 @@ static void init_landing()
 
 static void init_trajectory()
 {
-	float acc_0[3] = {0,0,0};
-	//float param[3][3] = {{45,0,0},{-45,0,0},{15,0,0}};
-	float param[3][3] = {{0,0,0},{0,0,0},{0,0,0}};
-	trajectory_init(param, acc_0, 2.);
+	Matrix acc_0 = initMatrix(3,1);
+	//float param_value[9] = {45,0,0,-45,0,0,15,0,0};
+	float param_value[9] = {0,0,0,0,0,0,0,0,0};
+	Matrix param = initMatrixValue(3,3,param_value);
+	trajectory_initMatrix(param, acc_0, 2.);
 	traj_init = TRUE;
 }
 
-static void trajectoryController(float R[3][3])
+static void trajectoryController(Matrix R)
 {
     if (traj_init && !landing)	trajectoryTracking(R);
 }
 
-static void trajectoryTracking(float R[3][3])
-{
+static void trajectoryTracking(Matrix R) {
 	float azref = 0;
-	get_trajectory_rotation(D, &azref);
-	float invR[3][3];
-	inverseMatrix(R,invR);
-    uz = (-1.0*(acc_body[2]*9.81 - azref) - 0.1*(kalman_vz - 0)
-    		-0.2*(kalman_z - ground_z - 0.8) +
-    		9.81+azref)/9.81;
-    force2 = acc_body[0]*acc_body[0] + acc_body[1]*acc_body[1] + uz*uz;
-	get_trajectory_angular_velocity(invR,force2,d);
+	D = get_trajectory_rotationMatrix(&azref);
+	Matrix invR = transposeMatrixBetter(R);
+	uz = (-1.0 * (*(acc_body.head + 2) * 9.81 - azref) - 0.1 * (kalman_vz - 0)
+			- 0.2 * (kalman_z - ground_z - 0.8) + 9.81 + azref) / 9.81;
+	force2 = *(acc_body.head) * (*(acc_body.head))
+			+ *(acc_body.head + 1) * (*(acc_body.head + 1)) + uz * uz;
+	d = get_trajectory_angular_velocityMatrix(invR, force2);
 }
 
 static void distributePower(const uint16_t thrust, const int16_t roll,
@@ -389,7 +404,7 @@ static float deadband(float value, const float threshold)
 
 LOG_GROUP_START(acc)
 LOG_ADD(LOG_FLOAT, x, &aslRaw)
-LOG_ADD(LOG_FLOAT, y, &acc_body[2])
+LOG_ADD(LOG_FLOAT, y, &acc.z)
 LOG_ADD(LOG_FLOAT, z, &kalman_vz)
 LOG_ADD(LOG_FLOAT, zw, &kalman_z)
 LOG_GROUP_STOP(acc)
