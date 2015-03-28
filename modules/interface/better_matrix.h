@@ -16,8 +16,6 @@ typedef struct {
 Matrix initMatrix(int row, int column);
 Matrix initMatrixValue(int row, int column, float *array);
 
-void printMatrix(Matrix a);
-
 Matrix matrixProductBetter(Matrix a, Matrix b);
 Matrix scalarMatrixProductBetter(float k, Matrix a);
 float norm2(Matrix a);

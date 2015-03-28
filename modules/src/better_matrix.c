@@ -6,9 +6,7 @@
  */
 
 #include "better_matrix.h"
-#include <stdio.h>
-#include <stdlib.h>
-
+#include "stdlib.h"
 Matrix subMatrix3(Matrix a);
 
 Matrix matrixSubtraction(Matrix a, Matrix b) {
@@ -155,17 +153,6 @@ Matrix initMatrixValue(int row, int column, float *array) {
 	t.column = column;
 	t.head = array;
 	return t;
-}
-
-
-void printMatrix(Matrix a) {
-	int i, j;
-	for (i = 0; i < a.row; i++) {
-		for (j = 0; j < a.column; j++)
-			printf("%f\t", *(a.head + i * a.column + j));
-		printf("\n");
-	}
-	printf("\n");
 }
 
 Matrix normalizeMatrix(Matrix a) {
