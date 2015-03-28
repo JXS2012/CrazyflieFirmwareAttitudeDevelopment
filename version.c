@@ -32,16 +32,16 @@
 #include "config.h"
 #include "param.h"
 
-const char * V_SLOCAL_REVISION="0";
-const char * V_SREVISION="22795bc09947";
-const char * V_STAG="v0.1";
+const char * V_SLOCAL_REVISION="1+";
+const char * V_SREVISION="b93aa7f0916e";
+const char * V_STAG="v0.1-matrix";
 const char * V_BRANCH="master";
 const char * V_PROFILE=P_NAME;
 const bool V_MODIFIED=true;
 
 /* Version recoverable from the ground */
-const uint32_t V_REVISION_0=0x22795bc0;
-const uint16_t V_REVISION_1=0x9947;
+const uint32_t V_REVISION_0=0xb93aa7f0;
+const uint16_t V_REVISION_1=0x916e;
 
 PARAM_GROUP_START(firmware)
 PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, revision0, &V_REVISION_0)
