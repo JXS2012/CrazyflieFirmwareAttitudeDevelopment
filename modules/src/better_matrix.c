@@ -6,7 +6,8 @@
  */
 
 #include "better_matrix.h"
-#include "stdlib.h"
+//#include "stdlib.h"
+
 Matrix subMatrix3(Matrix a);
 
 Matrix matrixSubtraction(Matrix a, Matrix b) {

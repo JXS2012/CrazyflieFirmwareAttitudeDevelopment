@@ -4,7 +4,8 @@
  *  Created on: Mar 19, 2015
  *      Author: jianxin
  */
-#include "better_matrix.h"
+#include "better_kalman.h"
+
 //kalman run at 100 Hz, dt = 1/100
 static float valueA[4] = {  1, 0.01 ,  0, 1  };
 static float valueB[2] = { 0, 0.01 };

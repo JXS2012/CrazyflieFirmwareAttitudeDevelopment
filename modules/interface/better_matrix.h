@@ -8,6 +8,12 @@ c cla * matrix.h
 #ifndef MATRIX_H_
 #define MATRIX_H_
 
+#include "FreeRTOS.h"
+
+#define malloc(size) pvPortMalloc(size)
+#define free(ptr) pvPortFree(ptr)
+
+
 typedef struct {
 	int row, column;
 	float *head;
