@@ -11,12 +11,12 @@ c cla * matrix.h
 #include "FreeRTOS.h"
 
 #define malloc(size) pvPortMalloc(size)
-#define free(ptr) pvPortFree(ptr)
+#define free(ptr) vPortFree(ptr)
 
 
 typedef struct {
 	int row, column;
-	float *head;
+	float head[9];
 } Matrix;
 
 Matrix initMatrix(int row, int column);

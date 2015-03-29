@@ -89,7 +89,7 @@ Matrix subMatrix3(Matrix a) {
 }
 
 Matrix transposeMatrixBetter(Matrix a) {
-	Matrix t = initMatrix(a.row, a.column);
+	Matrix t = initMatrix(a.column, a.row);
 	int i, j;
 	for (i = 0; i < t.row; i++)
 		for (j = 0; j < t.column; j++)
@@ -141,18 +141,19 @@ Matrix initMatrix(int row, int column) {
 	Matrix t;
 	t.row = row;
 	t.column = column;
-	t.head = (float *) malloc(sizeof(float) * row * column);
 	int i;
 	for (i = 0; i < row*column; i++)
-		*(t.head + i) = 0;
+		t.head[i] = 0;
 	return t;
 }
 
 Matrix initMatrixValue(int row, int column, float *array) {
-	Matrix t;
+	Matrix t = initMatrix(row, column);
 	t.row = row;
 	t.column = column;
-	t.head = array;
+	int i;
+	for (i = 0; i < row*column; i ++)
+		t.head[i] = array[i];
 	return t;
 }
 
